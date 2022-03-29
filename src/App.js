@@ -9,16 +9,14 @@ import {
   Input,
   InputNumber,
   message,
-  List
+  List,
 } from "antd";
 import firebase from "./firebase-config";
+import { Content, Header, Footer } from "antd/lib/layout/layout";
 
 const layout = {
   labelCol: {
-    span: 8,
-  },
-  wrapperCol: {
-    span: 16,
+    span: 5,
   },
 };
 const userRef = firebase.firestore().collection("users");
@@ -28,86 +26,98 @@ const App = () => {
   const [users, setUsers] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
   const onFinish = (user) => {
-    if(user?.id) {
-      userRef.doc(user.id).update(user).then(()=>{
-        form.resetFields();
-        setIsEdit(false);
-        message.success("Your data is successfully saved")
-      })
+    if (user?.id) {
+      userRef
+        .doc(user.id)
+        .update(user)
+        .then(() => {
+          form.resetFields();
+          setIsEdit(false);
+          message.success("Your data is successfully updated");
+        });
     } else {
       const id = userRef.doc().id;
-    const data = {
-      ...user,
-      id,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    };
-    userRef
-      .doc(id)
-      .set(data, { merge: true })
-      .then(() => {
-        form.resetFields();
-        message.success("your information saved");
-      });
+      const data = {
+        ...user,
+        id,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+      userRef
+        .doc(id)
+        .set(data, { merge: true })
+        .then(() => {
+          form.resetFields();
+          message.success("Your information has been saved");
+        });
     }
   };
   const getUsers = () => {
-  const unSub = userRef.onSnapshot((snapshot) => {
-  const userList= [];
-  if(snapshot){
-    snapshot.docs.map((doc) => userList.push(doc.data()))
-  }      
-  setUsers(userList)
-  })  
-  return () => unSub();
-   }  
-  
-   const handleEdit = (item) => { 
-     setIsEdit(true);
-    form.setFieldsValue(item)     
-   }
-   const handleDelete = (id) => {
-    userRef.doc(id).delete().then(()=>message.success("your data has been deleted "))
-   }
+    const unSub = userRef.onSnapshot((snapshot) => {
+      const userList = [];
+      if (snapshot) {
+        snapshot.docs.map((doc) => userList.push(doc.data()));
+      }
+      setUsers(userList);
+    });
+    return () => unSub();
+  };
+
+  const handleEdit = (item) => {
+    setIsEdit(true);
+    form.setFieldsValue(item);
+  };
+  const handleDelete = (id) => {
+    userRef
+      .doc(id)
+      .delete()
+      .then(() => message.success("Your data has been deleted "));
+  };
 
   const renderUserList = () => {
-  return(
-    <List
-    header={<div>User Data</div>}
-    bordered
-    dataSource={users}
-    renderItem={item => (
-      <List.Item actions={
-       [
-         <a onClick={() => handleEdit(item)}>Edit</a>,
-         <a onClick={() => handleDelete(item.id)}>Delete</a>
-         
-       ] 
-      }>
-        <List.Item.Meta 
-          title={item.name}
-          description={item.email}
-         />
-         <div style={{fontSize:'16px'}}>
-        {item.age} Years old
-         </div>
-                 
-      </List.Item>
-    )}
-  />
-  )    
-  }
+    return (
+      <List
+        header={
+          <div>
+            {" "}
+            <strong>User Data</strong>
+          </div>
+        }
+        bordered
+        dataSource={users}
+        renderItem={(item) => (
+          <List.Item
+            actions={[
+              <a onClick={() => handleEdit(item)}>Edit</a>,
+              <a onClick={() => handleDelete(item.id)}>Delete</a>,
+            ]}
+          >
+            <List.Item.Meta title={item.name} description={item.email} />
+            <div style={{ fontSize: "16px" }}>{item.age} Years old</div>
+          </List.Item>
+        )}
+      />
+    );
+  };
 
   useEffect(() => {
-    getUsers()
-  }, [])
-   
+    getUsers();
+  }, []);
+
   return (
     <div className="App">
-      <Row>
-        <Col span={8} style={{ borderWidth: 1.5 }}>
-          <Card title={isEdit ? "Edit your Infomation ": "Add your Information"}>
+        <Header><h1 style={{color:'white'}}>REACT CRUD APP</h1></Header>
+      <Content   className="site-layout-background"
+        style={{
+          padding: 24,
+          margin: 0,
+          minHeight: 280,
+        }}>
+      <Col style={{  margin:' 0 auto' }} span={8}>
+          <Card
+            title={isEdit ? "Edit your Infomation " : "Add your Information"}
+          >
             <Form form={form} onFinish={onFinish} {...layout}>
-              <Form.Item name="id" style={{ borderWidth: 1.5 }}/>
+              <Form.Item name="id" style={{ borderWidth: 1.5 }} />
               <Form.Item name="name" label="Nama" rules={[{ required: true }]}>
                 <Input />
               </Form.Item>
@@ -143,9 +153,12 @@ const App = () => {
             </Form>
           </Card>
         </Col>
-        
-        <Col style={{paddingLeft:'20px'}} span={16}>{renderUserList()}</Col>
-      </Row>
+        <br></br>
+        <Col style={{  margin:' 0 auto' }} span={8}>
+          {renderUserList()}
+        </Col>
+      </Content>
+      <Footer style={{marginTop:'20px', textAlign:'center'}}>REACT APP DESIGN BY ANTD</Footer>
     </div>
   );
 };
